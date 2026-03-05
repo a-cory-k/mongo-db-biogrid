@@ -1,0 +1,98 @@
+version: '3.8'
+
+services:
+  # server
+  configsvr:
+    build: .
+    container_name: configsvr
+    command: mongod --configsvr --replSet rsConfig --port 27017 --keyFile /etc/mongo-keyfile --bind_ip_all
+    ports:
+      - "27019:27017"
+    networks:
+      - mongo-cluster
+
+  # shard1
+  shard1:
+    build: .
+    container_name: shard1
+    command: mongod --shardsvr --replSet rsShard1 --port 27017 --keyFile /etc/mongo-keyfile --bind_ip_all
+    ports:
+      - "27018:27017"
+    networks:
+      - mongo-cluster
+
+  # B Secondary
+  shard1-b:
+    build: .
+    container_name: shard1-b
+    command: mongod --shardsvr --replSet rsShard1 --port 27017 --keyFile /etc/mongo-keyfile --bind_ip_all
+    ports:
+      - "27022:27017" 
+    networks:
+      - mongo-cluster
+
+  #  C Secondary
+  shard1-c:
+    build: .
+    container_name: shard1-c
+    command: mongod --shardsvr --replSet rsShard1 --port 27017 --keyFile /etc/mongo-keyfile --bind_ip_all
+    ports:
+      - "27023:27017" 
+    networks:
+      - mongo-cluster
+
+  # shard 2 
+  shard2:
+    build: .
+    container_name: shard2
+    command: mongod --shardsvr --replSet rsShard2 --port 27017 --keyFile /etc/mongo-keyfile --bind_ip_all
+    ports:
+      - "27020:27017"
+    networks:
+      - mongo-cluster
+
+  # shard 3
+  shard3:
+    build: .
+    container_name: shard3
+    command: mongod --shardsvr --replSet rsShard3 --port 27017 --keyFile /etc/mongo-keyfile --bind_ip_all
+    ports:
+      - "27021:27017"
+    networks:
+      - mongo-cluster
+
+  # -router
+  mongos:
+    build: .
+    container_name: mongos
+    depends_on:
+      - configsvr
+      - shard1
+      - shard1-b
+      - shard1-c
+      - shard2
+      - shard3
+    command: mongos --configdb rsConfig/configsvr:27017 --keyFile /etc/mongo-keyfile --bind_ip_all
+    ports:
+      - "27017:27017"
+    volumes:
+      - ./data:/data
+    networks:
+      - mongo-cluster
+
+  # automatization
+  setup-node:
+    image: docker:cli
+    container_name: setup-node
+    depends_on:
+      - mongos
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ./scripts:/scripts
+    networks:
+      - mongo-cluster
+    entrypoint: ["/bin/sh", "/scripts/setup.sh"]
+
+networks:
+  mongo-cluster:
+    driver: bridge
