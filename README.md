@@ -1,4 +1,4 @@
-# 1. část semestrální práce - NoSQL databáze - MongoDB
+# NoSQL databáze - MongoDB
 
 ## Architektura
 
