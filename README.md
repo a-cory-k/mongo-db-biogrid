@@ -12,7 +12,7 @@ Mé řešení se liší v tom, že využívá **hybridní architekturu**:
 
 ### Schéma a popis architektury
 
-![Описание картинки](pics/arch.png)
+![Описание картинки](arch.png)
 
 
 
